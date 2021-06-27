@@ -1,24 +1,29 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import {
+	BrowserRouter as Router, useHistory
+} from 'react-router-dom';
+import Routes from "./routes"
+import {Provider} from "react-redux"
+import configureStore from './store';
+import { PersistGate } from "redux-persist/integration/react";
+import initialStore from "./store/Reducers/inital-state";
+import { ToastProvider, useToasts } from 'react-toast-notifications'
 
-function App() {
+// SEGMENT INITIALIZED
+const App = () => {
+  
+  let storeValues = configureStore(initialStore);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <Provider store={storeValues.store}>
+        <PersistGate loading={null} persistor={storeValues.persistor}>
+          <ToastProvider>
+              <Router>
+                  <Routes />
+              </Router>
+          </ToastProvider>
+        </PersistGate>
+      </Provider>
   );
 }
 

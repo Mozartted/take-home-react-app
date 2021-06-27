@@ -1,13 +1,21 @@
 import React from 'react';
+// import $ from 'jquery';
+// import 'bootstrap/dist/js/bootstrap.bundle.min';
+import "bootstrap/dist/css/bootstrap.min.css"
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+// import 'react-phone-input-2/lib/bootstrap.css'
 import reportWebVitals from './reportWebVitals';
+import { ToastProvider, useToasts } from 'react-toast-notifications'
+
+
+
+
+const Index = () => (<ToastProvider><App/></ToastProvider>)
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <Index />,
   document.getElementById('root')
 );
 
