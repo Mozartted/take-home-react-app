@@ -5,13 +5,18 @@ import {PenTool, Search} from "react-feather"
 import { Calendar, momentLocalizer } from "react-big-calendar"
 import moment from "moment"
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import 'react-dates/initialize';
 import Api from "../../utils/api"
 import {api} from "../../configs"
 import {useToasts} from 'react-toast-notifications'
-import FullCalendar from '@fullcalendar/react' // must go before plugins
+import FullCalendar, { formatDate } from '@fullcalendar/react' // must go before plugins
 import dayGridPlugin from '@fullcalendar/daygrid' // a plugin!
 import swal from "sweetalert"
 import {withRouter, useHistory, Link} from "react-router-dom"
+// import DatePicker from "../../components/datetime"
+import Flatpickr from "react-flatpickr"
+import "flatpickr/dist/flatpickr.min.css";
+import "flatpickr/dist/themes/light.css";
 
 const localizer = momentLocalizer(moment)
 
@@ -19,6 +24,8 @@ const CustomerView = (props) => {
 
     const {addToast} = useToasts()
     const history = useHistory()
+
+    // States decleared here
     const [events, updateEvents] =useState([
         {
           start: moment().toDate(),
@@ -30,6 +37,11 @@ const CustomerView = (props) => {
         }
       ])
     const [services, updateServices] =useState([])
+    const [dateRange, updateDateRange] =useState({
+        start_range: null,
+        end_range: null,
+        focused: null
+    })
     const [params, updateParams] =useState({
         name: null,
         service_id: null,
@@ -39,6 +51,8 @@ const CustomerView = (props) => {
         username: null,
         email: null
     })
+
+    // End of state declaration
 
     const updateParamEvent = (e) => {
         updateParams({
@@ -98,6 +112,28 @@ const CustomerView = (props) => {
         }
     }
 
+    const filterForDate = async () => {
+        try {
+            let resp = await api.get(`/workorders?start_range=${dateRange.start_range}&end_range=${dateRange.end_range}`);
+            if(resp){
+                console.log(resp)
+                let NewOrders = resp.data.map((item, value) => {
+                    return {
+                        title: item.name,
+                        start: moment(item.start_time).toDate(),
+                        end: moment(item.end_time).toDate()
+                    }
+                })
+                updateEvents(NewOrders)
+            }
+        } catch (e) {
+            addToast(e, {
+                appearance: "error",
+                autoDismiss: true
+            })
+        }
+    }
+
     const createNewWorkOrder = async () => {
         try {
             let resp = await api.post('/workorder/create', params);
@@ -143,15 +179,54 @@ const CustomerView = (props) => {
                 </Col>
             </Row>
             <Row className="justify-content-center">
-                <Col md={5} className={classnames("text-center mt-5")}>
-                    <Form>
-                       <InputGroup className="mb-2 mr-sm-2">
-                           <Form.Control id="inlineFormInputGroupUsername" placeholder="Search for an appointment" />
-                           <InputGroup.Append>
-                               <Button variant="primary"> <Search/></Button>
-                           </InputGroup.Append>
-                       </InputGroup>
-                    </Form>
+                <Col md={4}>
+                    <Row>
+                        <Col md={9} className={classnames("text-center mt-5")}>
+                            <Row>
+                                <Col md={6}>
+                                    <Flatpickr
+                                        data-enable-time
+                                        options={
+                                            {
+                                                altFormat: "F j, Y"
+                                            }
+                                        }
+                                        placeholder="Start range"
+                                        value={dateRange.start_range}
+                                        className="form-control"
+                                        onChange={date => {
+                                            // console.log(date)
+                                            updateDateRange({...dateRange, start_range: moment(date[0]).format()});
+                                        }}
+                                    />
+                                </Col>
+                                <Col md={6}>
+                                    <Flatpickr
+                                        data-enable-time
+                                        options={
+                                            {
+                                                altFormat: "F j, Y",
+                                                minDate: dateRange.start_range
+                                            }
+                                        }
+                                        placeholder="End range"
+                                        minDate={dateRange.start_range}
+                                        value={dateRange.end_range}
+                                        className="form-control"
+                                        onChange={date => {
+                                            // console.log(date)
+                                            updateDateRange({...dateRange, end_range: moment(date[0]).format()});
+                                        }}
+                                    />
+                                </Col>
+                            </Row>
+                        </Col>
+                        <Col md="auto" className={classnames("text-center mt-5")}>
+                            <Button onClick={filterForDate}>
+                                <Search />
+                            </Button>
+                        </Col>
+                    </Row>
                 </Col>
             </Row>
             <Row>
